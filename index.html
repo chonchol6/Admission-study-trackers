@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ভর্তি প্রস্তুতি ট্র্যাকার</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#f3f5f2;--card:#fff;--ink:#1d2a2a;--mut:#667574;--line:#dde3df;--pri:#1f6f6b;--pri2:#e4f1ef;--warn:#b4572b;--ok:#2e7d4f;--r:10px}
+[data-theme=dark]{--bg:#141b1b;--card:#1d2626;--ink:#e6eeec;--mut:#9ab0ad;--line:#2d3b3b;--pri:#4fb3ab;--pri2:#213535;--warn:#e0875c;--ok:#5cc08a}
+*{box-sizing:border-box}html,body{margin:0}
+body{font-family:'Hind Siliguri',system-ui,sans-serif;background:var(--bg);color:var(--ink);line-height:1.55;overflow-x:hidden}
+h1,h2,h3{margin:0 0 .6rem;font-weight:600}h2{font-size:1.25rem}h3{font-size:1.05rem}
+.wrap{max-width:900px;margin:0 auto;padding:0 14px 90px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:16px;margin-bottom:14px}
+.top{display:flex;justify-content:space-between;align-items:center;padding:12px 0}
+.top b{font-size:1.1rem}
+nav{position:sticky;top:0;z-index:5;background:var(--bg);display:flex;gap:6px;overflow-x:auto;padding:8px 0;border-bottom:1px solid var(--line);margin-bottom:14px}
+nav button{white-space:nowrap;background:none;border:1px solid transparent;color:var(--mut);padding:7px 13px;border-radius:99px;font:inherit;cursor:pointer}
+nav button.on{background:var(--pri2);color:var(--pri);border-color:var(--pri);font-weight:600}
+label{display:block;font-size:.88rem;color:var(--mut);margin:10px 0 3px}
+input,select,textarea{width:100%;padding:9px 10px;border:1px solid var(--line);border-radius:8px;background:var(--card);color:var(--ink);font:inherit}
+textarea{min-height:60px;resize:vertical}
+input:focus,select:focus,textarea:focus,button:focus-visible{outline:2px solid var(--pri);outline-offset:1px}
+.btn{background:var(--pri);color:#fff;border:0;border-radius:8px;padding:9px 16px;font:inherit;font-weight:500;cursor:pointer}
+.btn.alt{background:var(--pri2);color:var(--pri)}.btn.red{background:var(--warn)}.btn:disabled{opacity:.45;cursor:not-allowed}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}.row>*{flex:1 1 140px}.row .btn{flex:0 0 auto}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px}
+.stat{background:var(--pri2);border-radius:var(--r);padding:12px}.stat small{color:var(--mut);display:block}.stat b{font-size:1.4rem}
+.bar{height:9px;background:var(--line);border-radius:9px;overflow:hidden}.bar i{display:block;height:100%;background:var(--pri)}
+.clock{font-size:3.2rem;font-weight:600;text-align:center;font-variant-numeric:tabular-nums;margin:8px 0}
+.item{display:flex;justify-content:space-between;gap:10px;align-items:center;padding:10px 0;border-bottom:1px solid var(--line);flex-wrap:wrap}
+.item:last-child{border:0}.item small{color:var(--mut)}.tag{background:var(--pri2);color:var(--pri);border-radius:6px;padding:1px 8px;font-size:.8rem}
+.week{display:flex;gap:8px;align-items:flex-end;height:110px}.week div{flex:1;text-align:center;font-size:.75rem;color:var(--mut)}
+.week i{display:block;background:var(--pri);border-radius:5px 5px 0 0;min-height:2px;margin-bottom:3px}
+.empty{color:var(--mut);text-align:center;padding:14px}
+.view{display:none}.view.on{display:block}
+#toast{position:fixed;bottom:18px;left:50%;transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:10px 18px;border-radius:8px;opacity:0;pointer-events:none;transition:opacity .25s;z-index:9;max-width:90vw}
+#toast.show{opacity:1}
+.err{color:var(--warn);font-size:.9rem;min-height:1.2em}
+#auth{max-width:400px;margin:8vh auto;padding:0 14px}
+.bn{background:var(--warn);color:#fff;padding:8px 14px;text-align:center;font-size:.9rem}
+#rep{background:#fff;color:#111;padding:18px;border:1px solid var(--line);border-radius:var(--r)}
+#rep table{width:100%;border-collapse:collapse;font-size:.9rem}#rep td,#rep th{border-bottom:1px solid #ccc;padding:5px;text-align:left}
+@media print{body>*:not(#app),#app>*:not(.wrap),.wrap>*:not(#v-report),#v-report>*:not(.card:last-child),.noprint{display:none!important}}
+@media(prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<div id="cfgerr" class="bn" style="display:none">Firebase কনফিগারেশন বসানো হয়নি। index.html-এর FIREBASE_CONFIG অংশে আপনার তথ্য বসান।</div>
+<div id="auth" style="display:none">
+ <div class="card">
+  <h2>ভর্তি প্রস্তুতি ট্র্যাকার</h2>
+  <label for="em">ইমেইল</label><input id="em" type="email" autocomplete="email">
+  <label for="pw">পাসওয়ার্ড (কমপক্ষে ৬ অক্ষর)</label><input id="pw" type="password" autocomplete="current-password">
+  <p class="err" id="aerr"></p>
+  <div class="row"><button class="btn" id="login">লগইন</button><button class="btn alt" id="signup">নতুন অ্যাকাউন্ট</button></div>
+  <p><a href="#" id="reset">পাসওয়ার্ড ভুলে গেছেন?</a></p>
+ </div>
+</div>
+
+<div id="app" style="display:none"><div class="wrap">
+ <div class="top"><b>📚 ভর্তি প্রস্তুতি ট্র্যাকার</b><small id="sync">—</small></div>
+ <nav id="nav">
+  <button data-v="dash" class="on">ড্যাশবোর্ড</button><button data-v="timer">টাইমার</button><button data-v="tasks">কাজ</button>
+  <button data-v="memo">মুখস্থ ও রিভিশন</button><button data-v="report">রিপোর্ট</button><button data-v="set">সেটিংস</button>
+ </nav>
+
+ <section class="view on" id="v-dash">
+  <div class="card"><h3>আজকের লক্ষ্য</h3><div class="bar"><i id="goalbar"></i></div><p id="goaltxt"></p></div>
+  <div class="grid" id="stats"></div><br>
+  <div class="card"><h3>আজ ক্যাটাগরি অনুযায়ী</h3><div id="todaycats"></div></div>
+  <div class="card"><h3>গত ৭ দিন</h3><div class="week" id="week"></div></div>
+  <div class="card" id="dtimer"></div>
+ </section>
+
+ <section class="view" id="v-timer">
+  <div class="card">
+   <div class="clock" id="clock">০০:০০:০০</div>
+   <p style="text-align:center;color:var(--mut)" id="tstat">একটানা সর্বোচ্চ ২ ঘণ্টা, এরপর সেশন নিজে থেকে শেষ হবে।</p>
+   <label for="tcat">ক্যাটাগরি</label><select id="tcat"></select>
+   <label for="ttask">কাজ (ঐচ্ছিক)</label><select id="ttask"></select>
+   <label for="tnote">নোট</label><textarea id="tnote"></textarea>
+   <div class="row" style="margin-top:12px">
+    <button class="btn" id="bstart">শুরু</button><button class="btn alt" id="bpause">বিরতি</button>
+    <button class="btn alt" id="bresume">চালু করুন</button><button class="btn" id="bstop">শেষ ও সেভ</button><button class="btn red" id="breset">বাতিল</button>
+   </div>
+  </div>
+ </section>
+
+ <section class="view" id="v-tasks">
+  <div class="card"><h3 id="tfh">নতুন কাজ</h3><input type="hidden" id="tfid">
+   <label for="tft">কাজের নাম</label><input id="tft" maxlength="200">
+   <div class="row"><div><label for="tfc">ক্যাটাগরি</label><select id="tfc"></select></div><div><label for="tfd">নির্ধারিত তারিখ</label><input type="date" id="tfd"></div></div>
+   <div class="row"><div><label for="tfm">লক্ষ্য সময় (মিনিট)</label><input type="number" min="0" id="tfm"></div><div><label for="tfa">পৃষ্ঠা/প্রশ্ন সংখ্যা</label><input type="number" min="0" id="tfa"></div></div>
+   <div class="row"><div><label for="tfs">অবস্থা</label><select id="tfs"><option value="todo">অসম্পন্ন</option><option value="partial">আংশিক</option><option value="done">সম্পন্ন</option></select></div><div><label for="tfp">অগ্রগতি (%)</label><input type="number" min="0" max="100" id="tfp" value="0"></div></div>
+   <label for="tfn">নোট</label><textarea id="tfn"></textarea>
+   <div class="row" style="margin-top:12px"><button class="btn" id="tfsave">সেভ করুন</button><button class="btn alt" id="tfcancel">নতুন ফর্ম</button></div>
+  </div>
+  <div class="card"><h3>সব কাজ</h3><div id="tlist"></div></div>
+ </section>
+
+ <section class="view" id="v-memo">
+  <div class="card"><h3 id="mfh">মুখস্থ / রিভিশন আইটেম</h3><input type="hidden" id="mfid">
+   <label for="mft">বিষয় (টপিক)</label><select id="mft"></select>
+   <label for="mfn">আইটেমের নাম/বিবরণ</label><input id="mfn" maxlength="200">
+   <div class="row"><div><label for="mfg">লক্ষ্য (শব্দ/প্রশ্ন/পৃষ্ঠা)</label><input type="number" min="0" id="mfg"></div><div><label for="mfd">এখন পর্যন্ত হয়েছে</label><input type="number" min="0" id="mfd"></div><div><label for="mfm">সময় (মিনিট)</label><input type="number" min="0" id="mfm"></div></div>
+   <div class="row"><div><label for="mfr">রিভিশনের তারিখ</label><input type="date" id="mfr"></div><div><label for="mfc">রিভিশন হয়েছে (বার)</label><input type="number" min="0" id="mfc" value="0"></div><div><label for="mfs">অবস্থা</label><select id="mfs"><option value="todo">অসম্পন্ন</option><option value="done">সম্পন্ন</option></select></div></div>
+   <div class="row" style="margin-top:12px"><button class="btn" id="mfsave">সেভ করুন</button><button class="btn alt" id="mfcancel">নতুন ফর্ম</button></div>
+  </div>
+  <div class="card"><h3>তালিকা</h3><div id="mlist"></div></div>
+ </section>
+
+ <section class="view" id="v-report">
+  <div class="card noprint"><label for="rdate">তারিখ</label><input type="date" id="rdate">
+   <div class="row" style="margin-top:12px"><button class="btn" id="rpdf">PDF ডাউনলোড</button><button class="btn alt" id="rprint">প্রিন্ট</button></div></div>
+  <div class="card" style="padding:0;border:0"><div id="rep"></div></div>
+ </section>
+
+ <section class="view" id="v-set">
+  <div class="card"><h3>অ্যাকাউন্ট</h3><p id="uemail"></p><button class="btn red" id="logout">লগআউট</button></div>
+  <div class="card"><h3>পছন্দ</h3><label for="sgoal">দৈনিক পড়ার লক্ষ্য (মিনিট)</label><input type="number" id="sgoal" min="10" max="1440">
+   <label><input type="checkbox" id="sdark" style="width:auto"> ডার্ক মোড</label><button class="btn" id="ssave" style="margin-top:8px">সেভ</button></div>
+  <div class="card"><h3>ব্যাকআপ</h3>
+   <button class="btn" id="bexp">JSON এক্সপোর্ট</button><hr style="border:0;border-top:1px solid var(--line);margin:14px 0">
+   <label for="bfile">ব্যাকআপ ফাইল</label><input type="file" id="bfile" accept=".json,application/json">
+   <label for="bmode">পদ্ধতি</label><select id="bmode"><option value="merge">Merge (আগের ডেটা থাকবে, একই ID হলে আপডেট)</option><option value="replace">Replace (বিদ্যমান ডেটা মুছে ব্যাকআপ বসবে)</option></select>
+   <button class="btn alt" id="bimp" style="margin-top:8px">ইমপোর্ট</button></div>
+ </section>
+</div></div>
+<div id="toast" role="status"></div>
+
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script>
+/* ====== এখানে আপনার Firebase কনফিগারেশন বসান ====== */
+const FIREBASE_CONFIG = {
+  apiKey: "AIzaSyAm_P-LJmyhmytgCqQsDoRa6qrGi-B6Rcw",
+  authDomain: "public-01-9f8c3.firebaseapp.com",
+  projectId: "public-01-9f8c3",
+  storageBucket: "public-01-9f8c3.firebasestorage.app",
+  messagingSenderId: "855498885160",
+  appId: "1:855498885160:web:a25e39449c392c44ed4d1d"
+};
+/* ================================================== */
+
+const $=s=>document.querySelector(s);
+const CATS={english:'English',bangla:'বাংলা',gk:'GK',written:'রিটেন',memo:'মুখস্থ',revision:'রিভিশন',class:'ক্লাস',other:'অন্যান্য'};
+const TOPICS={'বাংলা':['বাগধারা','প্রবাদ-প্রবচন','বিপরীত শব্দ','সমার্থক শব্দ','এক কথায় প্রকাশ','শব্দার্থ','পারিভাষিক শব্দ','অনুবাদ'],
+'English':['Phrases and Idioms','Appropriate Preposition','Group Verb','Synonym and Antonym','One Word Substitution','Spelling','Analogy','Proverb']};
+const STAT={todo:'অসম্পন্ন',partial:'আংশিক',done:'সম্পন্ন'};
+const MAX=7200000;
+const bn=n=>String(n).replace(/\d/g,d=>'০১২৩৪৫৬৭৮৯'[d]);
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const bdKey=ms=>new Date(ms+6*36e5).toISOString().slice(0,10);
+const bdTime=ms=>bn(new Date(ms+6*36e5).toISOString().slice(11,16));
+const hm=sec=>{sec=Math.round(sec);const h=Math.floor(sec/3600),m=Math.floor(sec%3600/60);return bn(h?h+' ঘ '+m+' মি':m+' মি')};
+const clk=ms=>{const s=Math.floor(ms/1000);return bn([Math.floor(s/3600),Math.floor(s%3600/60),s%60].map(x=>String(x).padStart(2,'0')).join(':'))};
+function toast(m){const t=$('#toast');t.textContent=m;t.classList.add('show');clearTimeout(toast.h);toast.h=setTimeout(()=>t.classList.remove('show'),3200)}
+const ERR={'auth/invalid-email':'ইমেইল সঠিক নয়।','auth/missing-password':'পাসওয়ার্ড লিখুন।','auth/weak-password':'পাসওয়ার্ড অন্তত ৬ অক্ষরের হতে হবে।','auth/email-already-in-use':'এই ইমেইলে আগেই অ্যাকাউন্ট আছে।','auth/invalid-credential':'ইমেইল বা পাসওয়ার্ড ভুল।','auth/wrong-password':'পাসওয়ার্ড ভুল।','auth/user-not-found':'এই ইমেইলে অ্যাকাউন্ট নেই।','auth/too-many-requests':'অনেকবার চেষ্টা হয়েছে, কিছুক্ষণ পর আবার চেষ্টা করুন।','auth/network-request-failed':'ইন্টারনেট সংযোগ নেই।','auth/unauthorized-domain':'এই ডোমেইন Firebase-এর Authorized domains-এ যোগ করা হয়নি।'};
+function dbErr(e){console.warn(e&&e.code);toast(e&&e.code==='permission-denied'?'অনুমতি নেই: Firestore Rules ঠিকভাবে বসানো হয়েছে কিনা দেখুন।':'ডেটা সেভ/লোড করা যায়নি। সংযোগ দেখে আবার চেষ্টা করুন।')}
+
+if(!FIREBASE_CONFIG.apiKey||!FIREBASE_CONFIG.projectId){$('#cfgerr').style.display='block';}
+else{
+firebase.initializeApp(FIREBASE_CONFIG);
+const auth=firebase.auth(),db=firebase.firestore();
+db.enablePersistence({synchronizeTabs:true}).catch(()=>toast('অফলাইন সংরক্ষণ চালু করা যায়নি; অনলাইনে থাকুন।'));
+let uid=null,unsubs=[],pend={},finishing=false,warned=false;
+const S={sessions:[],tasks:[],memo:[],set:{goalMin:240,dark:false},timer:null};
+const col=n=>db.collection('users').doc(uid).collection(n);
+const tdoc=()=>col('activeTimer').doc('current');
+const LK=()=>'tm_'+uid;
+
+/* ---------- Auth ---------- */
+$('#auth').style.display='block';
+const cred=()=>[$('#em').value.trim(),$('#pw').value];
+const aerr=e=>{$('#aerr').textContent=ERR[e.code]||'সমস্যা হয়েছে, আবার চেষ্টা করুন।'};
+$('#login').onclick=()=>{$('#aerr').textContent='';const[e,p]=cred();if(!e||!p){$('#aerr').textContent='ইমেইল ও পাসওয়ার্ড দিন।';return}auth.signInWithEmailAndPassword(e,p).catch(aerr)};
+$('#signup').onclick=()=>{$('#aerr').textContent='';const[e,p]=cred();if(!e||!p){$('#aerr').textContent='ইমেইল ও পাসওয়ার্ড দিন।';return}auth.createUserWithEmailAndPassword(e,p).catch(aerr)};
+$('#reset').onclick=ev=>{ev.preventDefault();const e=$('#em').value.trim();if(!e){$('#aerr').textContent='আগে ইমেইল লিখুন।';return}auth.sendPasswordResetEmail(e).then(()=>toast('রিসেট লিংক ইমেইলে পাঠানো হয়েছে।')).catch(aerr)};
+$('#logout').onclick=()=>auth.signOut();
+auth.onAuthStateChanged(u=>{
+  unsubs.forEach(f=>f());unsubs=[];
+  if(!u){uid=null;$('#app').style.display='none';$('#auth').style.display='block';return}
+  uid=u.uid;$('#auth').style.display='none';$('#app').style.display='block';$('#uemail').textContent=u.email;
+  try{S.timer=JSON.parse(localStorage.getItem(LK()))}catch(e){S.timer=null}
+  const lis=(n,order,fn)=>{let q=col(n);if(order)q=q.orderBy(order,'desc');unsubs.push(q.onSnapshot({includeMetadataChanges:true},s=>{pend[n]=s.metadata.hasPendingWrites;fn(s);sync();renderAll()},dbErr))};
+  lis('studySessions','startedAt',s=>S.sessions=s.docs.map(d=>({id:d.id,...d.data()})));
+  lis('tasks',null,s=>S.tasks=s.docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>(a.due||'9').localeCompare(b.due||'9')));
+  lis('memorization',null,s=>S.memo=s.docs.map(d=>({id:d.id,...d.data()})));
+  unsubs.push(col('settings').doc('main').onSnapshot(s=>{if(s.exists)S.set={...S.set,...s.data()};applyTheme();$('#sgoal').value=S.set.goalMin;$('#sdark').checked=!!S.set.dark;renderAll()},dbErr));
+  unsubs.push(tdoc().onSnapshot(s=>{S.timer=s.exists?s.data():null;try{S.timer?localStorage.setItem(LK(),JSON.stringify(S.timer)):localStorage.removeItem(LK())}catch(e){}renderAll();checkLimit()},dbErr));
+});
+function sync(){const t=$('#sync');if(!navigator.onLine){t.textContent='⚠ অফলাইন (ফিরলে সিঙ্ক হবে)';return}t.textContent=Object.values(pend).some(Boolean)?'সেভ হচ্ছে…':'✓ সেভ হয়েছে'}
+addEventListener('online',()=>{sync();toast('সংযোগ ফিরেছে, সিঙ্ক হচ্ছে।')});addEventListener('offline',()=>{sync();toast('ইন্টারনেট নেই। ডেটা এই ডিভাইসে রাখা হচ্ছে।')});
+function applyTheme(){document.documentElement.dataset.theme=S.set.dark?'dark':'light'}
+
+/* ---------- Nav ---------- */
+$('#nav').onclick=e=>{const v=e.target.dataset.v;if(!v)return;document.querySelectorAll('#nav button').forEach(b=>b.classList.toggle('on',b===e.target));document.querySelectorAll('.view').forEach(s=>s.classList.toggle('on',s.id==='v-'+v));renderAll()};
+const catOpts=()=>Object.entries(CATS).map(([k,v])=>`<option value="${k}">${v}</option>`).join('');
+['#tcat','#tfc'].forEach(s=>$(s).innerHTML=catOpts());
+$('#mft').innerHTML=Object.entries(TOPICS).map(([g,l])=>`<optgroup label="${g}">${l.map(x=>`<option value="${g}|${x}">${x}</option>`).join('')}</optgroup>`).join('');
+$('#tfd').value=$('#rdate').value=bdKey(Date.now());
+
+/* ---------- Timer ---------- */
+const el=t=>t.accMs+(t.status==='running'?Date.now()-t.runStart:0);
+function fillTasks(){const c=$('#tcat').value,cur=$('#ttask').value;$('#ttask').innerHTML='<option value="">— কাজ ছাড়া —</option>'+S.tasks.filter(t=>t.category===c&&t.status!=='done').map(t=>`<option value="${t.id}">${esc(t.title)}</option>`).join('');$('#ttask').value=cur}
+$('#tcat').onchange=fillTasks;
+function timerUI(){const t=S.timer;$('#bstart').style.display=t?'none':'';$('#bpause').style.display=t&&t.status==='running'?'':'none';$('#bresume').style.display=t&&t.status==='paused'?'':'none';
+ ['#bstop','#breset'].forEach(s=>$(s).style.display=t?'':'none');$('#tcat').disabled=$('#ttask').disabled=!!t;
+ if(t){$('#tcat').value=t.category;fillTasks();$('#ttask').value=t.taskId||'';if(document.activeElement!==$('#tnote')&&$('#tnote').value==='')$('#tnote').value=t.note||''}
+ $('#tstat').textContent=t?(t.status==='running'?'চলছে…':'বিরতিতে আছে'):'একটানা সর্বোচ্চ ২ ঘণ্টা, এরপর সেশন নিজে থেকে শেষ হবে।'}
+function tick(){const t=S.timer;$('#clock').textContent=clk(t?Math.min(el(t),MAX):0);if(t)checkLimit();
+ if(t&&!warned&&el(t)>=MAX-10*6e4){warned=true;toast('সতর্কতা: ১০ মিনিটের মধ্যে ২ ঘণ্টা পূর্ণ হবে, সেশন নিজে শেষ হবে।')}}
+setInterval(tick,500);document.addEventListener('visibilitychange',tick);
+function save(t,patch){S.timer={...t,...patch};try{localStorage.setItem(LK(),JSON.stringify(S.timer))}catch(e){}tdoc().set(S.timer).catch(dbErr);renderAll()}
+$('#bstart').onclick=()=>{if(S.timer)return toast('আগে চলমান টাইমার শেষ করুন।');const n=Date.now();warned=false;
+ save({},{category:$('#tcat').value,taskId:$('#ttask').value||'',note:'',startAt:n,runStart:n,accMs:0,status:'running'})};
+$('#bpause').onclick=()=>{const t=S.timer;if(!t||t.status!=='running')return;save(t,{accMs:Math.min(el(t),MAX),status:'paused',runStart:null,pausedAt:Date.now()})};
+$('#bresume').onclick=()=>{const t=S.timer;if(!t||t.status!=='paused')return;save(t,{status:'running',runStart:Date.now()})};
+$('#bstop').onclick=()=>finish(false);
+$('#breset').onclick=()=>{if(S.timer&&confirm('টাইমার বাতিল হবে এবং এই সেশন সেভ হবে না। নিশ্চিত?')){clearTimer()}};
+function clearTimer(){S.timer=null;try{localStorage.removeItem(LK())}catch(e){}tdoc().delete().catch(dbErr);$('#tnote').value='';renderAll()}
+function checkLimit(){if(S.timer&&el(S.timer)>=MAX)finish(true)}
+function finish(auto){const t=S.timer;if(!t||finishing)return;finishing=true;
+ const ms=Math.min(el(t),MAX),sec=Math.floor(ms/1000),end=t.status==='running'?t.runStart+(ms-t.accMs):(t.pausedAt||Date.now());
+ const note=($('#tnote').value||t.note||'').slice(0,1000);
+ if(sec>=1){const rec={category:t.category,taskId:t.taskId||'',note,startedAt:t.startAt,endedAt:end,seconds:sec,dateKey:bdKey(t.startAt),auto:!!auto};
+  const b=db.batch();b.set(col('studySessions').doc('S'+t.startAt),rec);b.delete(tdoc());b.commit().catch(dbErr);
+  toast(auto?'২ ঘণ্টা পূর্ণ হয়েছে। সেশন নিজে থেকে শেষ ও সেভ হয়েছে।':'সেশন সেভ হয়েছে: '+hm(sec))}
+ else{tdoc().delete().catch(dbErr);toast('১ সেকেন্ডের কম, তাই সেভ হয়নি।')}
+ S.timer=null;try{localStorage.removeItem(LK())}catch(e){}$('#tnote').value='';finishing=false;renderAll()}
+
+/* ---------- Dashboard ---------- */
+const sum=a=>a.reduce((x,s)=>x+s.seconds,0);
+function dash(){const today=bdKey(Date.now()),ts=S.sessions.filter(s=>s.dateKey===today),tot=sum(ts),goal=S.set.goalMin*60;
+ $('#goalbar').style.width=Math.min(100,tot/goal*100)+'%';$('#goaltxt').textContent=`${hm(tot)} / ${hm(goal)} (${bn(Math.min(999,Math.round(tot/goal*100)))}%)`;
+ const dn=S.tasks.filter(t=>t.status==='done').length,days={};S.sessions.forEach(s=>days[s.dateKey]=(days[s.dateKey]||0)+s.seconds);
+ let streak=0,d=Date.now();if(!days[bdKey(d)])d-=864e5;while(days[bdKey(d)]){streak++;d-=864e5}
+ const wk=[...Array(7)].map((_,i)=>{const k=bdKey(Date.now()-(6-i)*864e5);return[k,days[k]||0]});
+ $('#stats').innerHTML=[['আজ মোট',hm(tot)],['সম্পন্ন কাজ',bn(dn)],['অসম্পন্ন কাজ',bn(S.tasks.length-dn)],['এই সপ্তাহ',hm(wk.reduce((x,w)=>x+w[1],0))],['মোট পড়া',hm(sum(S.sessions))],['টানা দিন',bn(streak)+' দিন']].map(([a,b])=>`<div class="stat"><small>${a}</small><b>${b}</b></div>`).join('');
+ const c={};ts.forEach(s=>c[s.category]=(c[s.category]||0)+s.seconds);
+ $('#todaycats').innerHTML=Object.keys(c).length?Object.entries(c).map(([k,v])=>`<div class="item"><span>${CATS[k]||k}</span><b>${hm(v)}</b></div>`).join(''):'<div class="empty">আজ এখনো কোনো সেশন নেই। টাইমার থেকে শুরু করুন।</div>';
+ const mx=Math.max(1,...wk.map(w=>w[1]));$('#week').innerHTML=wk.map(([k,v])=>`<div><i style="height:${v/mx*80}px"></i>${bn(k.slice(8))}</div>`).join('');
+ $('#dtimer').innerHTML=S.timer?`<h3>চলমান টাইমার</h3><p>${CATS[S.timer.category]} — ${S.timer.status==='running'?'চলছে':'বিরতিতে'}, এখন পর্যন্ত ${hm(el(S.timer)/1000)}</p>`:'<h3>টাইমার</h3><p style="color:var(--mut)">কোনো টাইমার চালু নেই।</p>'}
+
+/* ---------- Tasks ---------- */
+function tasksUI(){fillTasks();$('#tlist').innerHTML=S.tasks.length?S.tasks.map(t=>`<div class="item"><div><b>${esc(t.title)}</b> <span class="tag">${CATS[t.category]||''}</span><br><small>${t.due?'তারিখ: '+bn(t.due)+' · ':''}${t.targetMin?'লক্ষ্য '+bn(t.targetMin)+' মি · ':''}${t.amount?bn(t.amount)+' পৃষ্ঠা/প্রশ্ন · ':''}${STAT[t.status]} ${bn(t.progress||0)}%</small>${t.note?'<br><small>'+esc(t.note)+'</small>':''}</div>
+ <div class="row" style="flex:0 0 auto"><button class="btn alt" data-ta="edit" data-id="${t.id}">সম্পাদনা</button><button class="btn red" data-ta="del" data-id="${t.id}">মুছুন</button></div></div>`).join(''):'<div class="empty">কোনো কাজ নেই। উপরের ফর্ম থেকে যোগ করুন।</div>'}
+const tfClear=()=>{$('#tfid').value='';$('#tft').value=$('#tfn').value='';$('#tfm').value=$('#tfa').value='';$('#tfp').value=0;$('#tfs').value='todo';$('#tfd').value=bdKey(Date.now());$('#tfh').textContent='নতুন কাজ'};
+$('#tfcancel').onclick=tfClear;
+$('#tfsave').onclick=()=>{const title=$('#tft').value.trim();if(!title)return toast('কাজের নাম লিখুন।');
+ let p=Math.max(0,Math.min(100,+$('#tfp').value||0)),st=$('#tfs').value;if(st==='done')p=100;
+ const rec={title,category:$('#tfc').value,due:$('#tfd').value||'',targetMin:Math.max(0,+$('#tfm').value||0),amount:Math.max(0,+$('#tfa').value||0),status:st,progress:p,note:$('#tfn').value.slice(0,1000),createdAt:Date.now()};
+ const id=$('#tfid').value;if(id){const o=S.tasks.find(t=>t.id===id);rec.createdAt=o?o.createdAt:rec.createdAt}
+ (id?col('tasks').doc(id).set(rec):col('tasks').add(rec)).then(()=>toast('কাজ সেভ হয়েছে।')).catch(dbErr);tfClear()};
+$('#tlist').onclick=e=>{const a=e.target.dataset.ta,id=e.target.dataset.id;if(!a)return;const t=S.tasks.find(x=>x.id===id);if(!t)return;
+ if(a==='del'){if(confirm('এই কাজ মুছে ফেলবেন?'))col('tasks').doc(id).delete().catch(dbErr)}
+ else{$('#tfid').value=id;$('#tft').value=t.title;$('#tfc').value=t.category;$('#tfd').value=t.due||'';$('#tfm').value=t.targetMin||'';$('#tfa').value=t.amount||'';$('#tfs').value=t.status;$('#tfp').value=t.progress||0;$('#tfn').value=t.note||'';$('#tfh').textContent='কাজ সম্পাদনা';scrollTo({top:0,behavior:'smooth'})}};
+
+/* ---------- Memo ---------- */
+function memoUI(){$('#mlist').innerHTML=S.memo.length?S.memo.map(m=>`<div class="item"><div><b>${esc(m.title)}</b> <span class="tag">${esc(m.topic)}</span><br><small>লক্ষ্য ${bn(m.goal||0)} · হয়েছে ${bn(m.done||0)} · ${bn(m.minutes||0)} মি · রিভিশন ${bn(m.revCount||0)} বার${m.revDate?' (শেষ/পরের: '+bn(m.revDate)+')':''} · ${STAT[m.status]||''}</small></div>
+ <div class="row" style="flex:0 0 auto"><button class="btn" data-ma="rev" data-id="${m.id}">+১ রিভিশন</button><button class="btn alt" data-ma="edit" data-id="${m.id}">সম্পাদনা</button><button class="btn red" data-ma="del" data-id="${m.id}">মুছুন</button></div></div>`).join(''):'<div class="empty">কোনো আইটেম নেই।</div>'}
+const mfClear=()=>{['#mfid','#mfn','#mfg','#mfd','#mfm'].forEach(s=>$(s).value='');$('#mfc').value=0;$('#mfr').value='';$('#mfs').value='todo';$('#mfh').textContent='মুখস্থ / রিভিশন আইটেম'};
+$('#mfcancel').onclick=mfClear;
+$('#mfsave').onclick=()=>{const title=$('#mfn').value.trim();if(!title)return toast('আইটেমের নাম লিখুন।');const[g,tp]=$('#mft').value.split('|');
+ const rec={group:g,topic:tp,title,goal:Math.max(0,+$('#mfg').value||0),done:Math.max(0,+$('#mfd').value||0),minutes:Math.max(0,+$('#mfm').value||0),revDate:$('#mfr').value||'',revCount:Math.max(0,Math.floor(+$('#mfc').value||0)),status:$('#mfs').value,createdAt:Date.now()};
+ const id=$('#mfid').value;(id?col('memorization').doc(id).set(rec):col('memorization').add(rec)).then(()=>toast('সেভ হয়েছে।')).catch(dbErr);mfClear()};
+$('#mlist').onclick=e=>{const a=e.target.dataset.ma,id=e.target.dataset.id;if(!a)return;const m=S.memo.find(x=>x.id===id);if(!m)return;
+ if(a==='del'){if(confirm('এই আইটেম মুছে ফেলবেন?'))col('memorization').doc(id).delete().catch(dbErr)}
+ else if(a==='rev')col('memorization').doc(id).update({revCount:(m.revCount||0)+1,revDate:bdKey(Date.now())}).catch(dbErr);
+ else{$('#mfid').value=id;$('#mft').value=m.group+'|'+m.topic;$('#mfn').value=m.title;$('#mfg').value=m.goal||'';$('#mfd').value=m.done||'';$('#mfm').value=m.minutes||'';$('#mfr').value=m.revDate||'';$('#mfc').value=m.revCount||0;$('#mfs').value=m.status||'todo';$('#mfh').textContent='আইটেম সম্পাদনা';scrollTo({top:0,behavior:'smooth'})}};
+
+/* ---------- Report ---------- */
+function report(){const k=$('#rdate').value;if(!k){$('#rep').innerHTML='<div class="empty">তারিখ নির্বাচন করুন।</div>';return}
+ const ss=S.sessions.filter(s=>s.dateKey===k).sort((a,b)=>a.startedAt-b.startedAt),tk=S.tasks.filter(t=>t.due===k),c={};ss.forEach(s=>c[s.category]=(c[s.category]||0)+s.seconds);
+ const notes=[...ss.filter(s=>s.note).map(s=>esc(s.note)),...tk.filter(t=>t.note).map(t=>esc(t.title+': '+t.note))];
+ $('#rep').innerHTML=`<h2 style="color:#111">দৈনিক পড়ার রিপোর্ট — ${bn(k)}</h2><p>মোট পড়া: <b>${hm(sum(ss))}</b> (লক্ষ্য ${hm(S.set.goalMin*60)})</p>
+ <h3>ক্যাটাগরি অনুযায়ী</h3>${Object.keys(c).length?'<table>'+Object.entries(c).map(([a,v])=>`<tr><td>${CATS[a]||a}</td><td>${hm(v)}</td></tr>`).join('')+'</table>':'<p>কোনো সেশন নেই।</p>'}
+ <h3>সেশন</h3>${ss.length?'<table><tr><th>শুরু</th><th>শেষ</th><th>ক্যাটাগরি</th><th>সময়</th></tr>'+ss.map(s=>`<tr><td>${bdTime(s.startedAt)}</td><td>${bdTime(s.endedAt)}</td><td>${CATS[s.category]||''}</td><td>${hm(s.seconds)}</td></tr>`).join('')+'</table>':'<p>—</p>'}
+ <h3>এই তারিখের কাজ</h3>${tk.length?'<table>'+tk.map(t=>`<tr><td>${esc(t.title)}</td><td>${STAT[t.status]}</td></tr>`).join('')+'</table>':'<p>—</p>'}
+ <h3>নোট</h3>${notes.length?'<ul>'+notes.map(n=>`<li>${n}</li>`).join('')+'</ul>':'<p>—</p>'}<p style="font-size:.8rem;color:#666">সময়: বাংলাদেশ (UTC+6)</p>`}
+$('#rdate').onchange=report;
+$('#rprint').onclick=()=>window.print();
+$('#rpdf').onclick=async()=>{if(!window.html2canvas||!window.jspdf)return toast('PDF লাইব্রেরি লোড হয়নি; ইন্টারনেট দেখুন।');
+ try{const cv=await html2canvas($('#rep'),{scale:2,backgroundColor:'#fff',windowWidth:800}),img=cv.toDataURL('image/png'),pdf=new jspdf.jsPDF('p','mm','a4'),w=190,h=cv.height*w/cv.width;
+  let left=h,pos=10;pdf.addImage(img,'PNG',10,pos,w,h);left-=277;while(left>0){pos=left-h+10;pdf.addPage();pdf.addImage(img,'PNG',10,pos,w,h);left-=277}
+  pdf.save('report-'+$('#rdate').value+'.pdf')}catch(e){toast('PDF তৈরি করা যায়নি।')}};
+
+/* ---------- Settings & Backup ---------- */
+$('#ssave').onclick=()=>{const g=Math.round(+$('#sgoal').value);if(!(g>=10&&g<=1440))return toast('লক্ষ্য ১০ থেকে ১৪৪০ মিনিটের মধ্যে দিন।');
+ col('settings').doc('main').set({goalMin:g,dark:$('#sdark').checked}).then(()=>toast('সেটিংস সেভ হয়েছে।')).catch(dbErr)};
+$('#bexp').onclick=()=>{const strip=a=>a.map(({id,...r})=>({id,...r}));const data={app:'study-tracker',version:1,exportedAt:Date.now(),sessions:strip(S.sessions),tasks:strip(S.tasks),memo:strip(S.memo)};
+ const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([JSON.stringify(data,null,2)],{type:'application/json'}));a.download='study-backup-'+bdKey(Date.now())+'.json';a.click();setTimeout(()=>URL.revokeObjectURL(a.href),2000)};
+const isStr=(v,n)=>typeof v==='string'&&v.length<=n,isNum=v=>typeof v==='number'&&isFinite(v);
+const idOk=v=>typeof v==='string'&&/^[A-Za-z0-9_-]{1,40}$/.test(v);
+function clean(d){const out={sessions:[],tasks:[],memo:[]};
+ if(!d||d.app!=='study-tracker'||!Array.isArray(d.sessions)||!Array.isArray(d.tasks)||!Array.isArray(d.memo))throw 0;
+ d.sessions.forEach(s=>{if(!idOk(s.id)||!(s.category in CATS)||!isNum(s.startedAt)||!isNum(s.endedAt)||!isNum(s.seconds)||s.seconds<1||s.seconds>7200)throw 0;
+  out.sessions.push({id:s.id,category:s.category,taskId:isStr(s.taskId,40)?s.taskId:'',note:isStr(s.note,1000)?s.note:'',startedAt:Math.floor(s.startedAt),endedAt:Math.floor(s.endedAt),seconds:Math.floor(s.seconds),dateKey:bdKey(s.startedAt),auto:!!s.auto})});
+ d.tasks.forEach(t=>{if(!idOk(t.id)||!isStr(t.title,200)||!t.title||!(t.category in CATS)||!(t.status in STAT))throw 0;
+  out.tasks.push({id:t.id,title:t.title,category:t.category,due:/^\d{4}-\d\d-\d\d$/.test(t.due)?t.due:'',targetMin:isNum(t.targetMin)?t.targetMin:0,amount:isNum(t.amount)?t.amount:0,status:t.status,progress:isNum(t.progress)?Math.max(0,Math.min(100,t.progress)):0,note:isStr(t.note,1000)?t.note:'',createdAt:isNum(t.createdAt)?t.createdAt:Date.now()})});
+ d.memo.forEach(m=>{if(!idOk(m.id)||!isStr(m.title,200)||!m.title)throw 0;
+  out.memo.push({id:m.id,group:isStr(m.group,40)?m.group:'',topic:isStr(m.topic,80)?m.topic:'',title:m.title,goal:isNum(m.goal)?m.goal:0,done:isNum(m.done)?m.done:0,minutes:isNum(m.minutes)?m.minutes:0,revDate:/^\d{4}-\d\d-\d\d$/.test(m.revDate)?m.revDate:'',revCount:isNum(m.revCount)?Math.floor(m.revCount):0,status:m.status==='done'?'done':'todo',createdAt:isNum(m.createdAt)?m.createdAt:Date.now()})});
+ return out}
+async function commit(ops){for(let i=0;i<ops.length;i+=400){const b=db.batch();ops.slice(i,i+400).forEach(f=>f(b));await b.commit()}}
+$('#bimp').onclick=async()=>{const f=$('#bfile').files[0];if(!f)return toast('আগে একটি ব্যাকআপ ফাইল বাছুন।');if(f.size>5e6)return toast('ফাইল অনেক বড়।');
+ let d;try{d=clean(JSON.parse(await f.text()))}catch(e){return toast('ভুল বা ক্ষতিগ্রস্ত ব্যাকআপ ফাইল। ইমপোর্ট করা হয়নি।')}
+ const mode=$('#bmode').value,n=d.sessions.length+d.tasks.length+d.memo.length;
+ if(!confirm(`${bn(n)}টি আইটেম ইমপোর্ট হবে (${mode==='replace'?'বিদ্যমান ডেটা মুছে যাবে':'বিদ্যমান ডেটা থাকবে'})। নিশ্চিত?`))return;
+ try{const ops=[];
+  if(mode==='replace')[['studySessions',S.sessions],['tasks',S.tasks],['memorization',S.memo]].forEach(([c,a])=>a.forEach(x=>ops.push(b=>b.delete(col(c).doc(x.id)))));
+  [['studySessions',d.sessions],['tasks',d.tasks],['memorization',d.memo]].forEach(([c,a])=>a.forEach(({id,...r})=>ops.push(b=>b.set(col(c).doc(id),r))));
+  await commit(ops);toast('ইমপোর্ট সম্পন্ন।');$('#bfile').value=''}catch(e){dbErr(e)}};
+
+function renderAll(){if(!uid)return;timerUI();tick();dash();tasksUI();memoUI();report()}
+}
+</script>
+</body>
+</html>
